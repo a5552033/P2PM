@@ -65,7 +65,7 @@ class CSchedule:
         judgeVariate = True  # type: bool
 
         tcur = 0
-        while tcur < self.SLOTNUM:
+        while tcur < (self.SLOTNUM -1):
             # print "SLOTNUM, slot time:", self.SLOTNUM, tcur
             line = freq.readline()
             reqperSlotcur = int(line)
@@ -105,7 +105,13 @@ class CSchedule:
                 minTimeCost = 0
                 timeAsrc = [0]
 
+                reslinktimecap = [[0.0 for t in range(rSlotNum)] for e in range(self.LINKNUM)]
+                for e in range(self.LINKNUM):
+                    for t in range(rSlotNum):
+                        reslinktimecap[e][t] = LinkResCaperSlot[e][t + r_start]
+
                 start_time = time.clock()
+
                 while len(new_sink) > 0:
                     numoftimeSlotfromSRCtoDST = [[0 for d in range(len(new_sink))] for s in range(len(new_src))]
                     pathCaptcur = [[[[0.0 for p in range(rPathNum)] for t in range(rSlotNum)] for d in range(len(new_sink))] for s in range(len(new_src))]
@@ -127,10 +133,12 @@ class CSchedule:
                                         linkid = self.PathList[src][sink][p][linkindex]
                                         # print(r_start, minTimeCost)
                                         linkCostSetontcur.append(
-                                            LinkResCaperSlot[linkid][t + r_start + timeAsrc[s]])
+                                            reslinktimecap[linkid][t + timeAsrc[s]])
 
-                                    tempSize = 0.0
-                                    tempSize += int(min(linkCostSetontcur))
+                                    tempSize = int(min(linkCostSetontcur))
+                                    for linkindex in range(len(self.PathList[src][sink][p])):
+                                        linkid = self.PathList[src][sink][p][linkindex]
+                                        reslinktimecap[linkid][t + timeAsrc[s]] -= tempSize
 
                                     pathCaptcur[s][d][t + timeAsrc[s]][p] = tempSize
                                     tempSize_3 += tempSize
@@ -181,23 +189,24 @@ class CSchedule:
 
                                 for p in range(rPathNum):
                                     ratio = pathCaptcur[m_min][n_min][t + timeAsrc[m_min]][p] / totalSize
-                                    partCostperPath = int(rSize / 300 * ratio)
-                                    for linkindex in range(
-                                            len(self.PathList[srctoSinkReadytoMove][sinkReadyMovetosrcList][p])):
+                                    costperLink = int(rSize / 300 * ratio)
+                                    for linkindex in range(len(self.PathList[srctoSinkReadytoMove][sinkReadyMovetosrcList][p])):
                                         linkid = self.PathList[srctoSinkReadytoMove][sinkReadyMovetosrcList][p][linkindex]
                                         # partCostperLink = partCostperPath/len(self.PathList[srctoSinkReadytoMove][sinkReadyMovetosrcList][p])
 
-                                        LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] -= partCostperPath
-                                        if LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] <= 0:
+                                        LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] -= costperLink
+                                        if LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] < 0:
                                             LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] = 0
                             else:
                                 if t < (minTimeCost - timeAsrc[m_min] - 1):
                                     for p in range(rPathNum):
+                                        costperLink = pathCaptcur[m_min][n_min][t + timeAsrc[m_min]][p]
                                         for linkindex in range(
                                                 len(self.PathList[srctoSinkReadytoMove][sinkReadyMovetosrcList][p])):
                                             linkid = self.PathList[srctoSinkReadytoMove][sinkReadyMovetosrcList][p][linkindex]
-                                            linkCostSetontcur = [LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]]]
-                                            LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] -= min(linkCostSetontcur)
+                                            # costperLink = [LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]]]
+                                            # costperLink = pathCaptcur[m_min][n_min][t + timeAsrc[m_min]][p]
+                                            LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] -= costperLink
 
                                         totalSize_2 += pathCaptcur[m_min][n_min][t + timeAsrc[m_min]][p]
                                         # print(pathCaptcur[m_min][n_min][t][p])
@@ -211,14 +220,15 @@ class CSchedule:
 
                                         for p in range(rPathNum):
                                             ratio = pathCaptcur[m_min][n_min][t + timeAsrc[m_min]][p] / totalSize
-                                            partCostperPath = int(rSize / 300 * ratio)
+                                            costperLink = int(rSize / 300 * ratio)
                                             for linkindex in range(len(
                                                     self.PathList[srctoSinkReadytoMove][sinkReadyMovetosrcList][p])):
                                                 linkid = self.PathList[srctoSinkReadytoMove][sinkReadyMovetosrcList][p][
                                                     linkindex]
                                                 LinkResCaperSlot[linkid][
-                                                    t + r_start + timeAsrc[m_min]] -= partCostperPath
+                                                    t + r_start + timeAsrc[m_min]] -= costperLink
                                                 if LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] < 0:
+
                                                     LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] = 0
                                     else:
                                         totalSize = 0
@@ -234,12 +244,12 @@ class CSchedule:
                                                     linkindex]
                                                 LinkResCaperSlot[linkid][
                                                     t + r_start + timeAsrc[m_min]] -= costperLink
-                                                if LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] <= 0:
+                                                if LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] < 0:
                                                     LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] = 0
 
                     else:
                         self.rejectReqs += 1
-                        # print("The %d request is rejected because the resource is used." % self.reqNUM)
+                        print("The %d request is rejected because the resource is used." % self.reqNUM)
                         judgeVariate = False
                         break
 
@@ -248,7 +258,7 @@ class CSchedule:
                     new_src.append(sinkReadyMovetosrcList)
 
                     if (minTimeCost >= rSlotNum) and (len(new_sink) > 0):
-                        # print("The %d request is rejected because of time out!" % self.reqNUM)
+                        print("The %d request is rejected because of time out!" % self.reqNUM)
                         # print(self.reqNUM, rSlotNum)
                         self.rejectReqs += 1
                         judgeVariate = False
@@ -260,7 +270,7 @@ class CSchedule:
 
                 if judgeVariate:
                     self.acceptReqs += 1
-                    # print("The %d request is accepted! " % self.reqNUM)
+                    print("The %d request is accepted! " % self.reqNUM)
                 end_time = time.clock()
                 # fl = open("acceptedratio_h.txt", "a")
                 # fl.writelines("%d %d %d %.2f%% %f" % (self.reqNUM, self.acceptReqs, self.rejectReqs, ((self.acceptReqs / self.reqNUM) * 100), (end_time - start_time)))
@@ -272,11 +282,11 @@ class CSchedule:
 
         freq.close()
 
-        # fl = open("acceptedratio_h.txt", "w")
-        # fl.writelines("%d %d %d %.2f%%" % (self.reqNUM, self.acceptReqs, self.rejectReqs, ((self.acceptReqs / self.reqNUM) * 100)))
-        # # print(self.acceptReqs / self.reqNUM)
-        # fl.writelines("\n")
-        # fl.close()
+        fl = open("acceptedratio_h.txt", "w")
+        fl.writelines("%d %d %d %.2f%%" % (self.reqNUM, self.acceptReqs, self.rejectReqs, ((self.acceptReqs / self.reqNUM) * 100)))
+        # print(self.acceptReqs / self.reqNUM)
+        fl.writelines("\n")
+        fl.close()
 
 
 if __name__ == "__main__":

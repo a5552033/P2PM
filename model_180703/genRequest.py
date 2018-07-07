@@ -37,11 +37,11 @@ class Request:
         self.LinkCaperSlot = [[self.linkCapacity for col in range(self.SLOTNUM)] for row in range(self.LINKNUM)]
 
         # 实际网络中，要预留出一部分的带宽
-        for linkid in range(self.LINKNUM):
-            for slotid in range(self.SLOTNUM):
-                interact = random.uniform(self.highpriotraffic_lower, self.highpriotraffic_upper)
-                interact = 1 - interact
-                self.LinkCaperSlot[linkid][slotid] *= interact
+        # for linkid in range(self.LINKNUM):
+        #     for slotid in range(self.SLOTNUM):
+        #         interact = random.uniform(self.highpriotraffic_lower, self.highpriotraffic_upper)
+        #         interact = 1 - interact
+        #         self.LinkCaperSlot[linkid][slotid] *= interact
 
         # this variate presents
         self.PathList = [[[[] for num in range(self.PATHNUM)] for col in range(self.NODENUM)] for row in
