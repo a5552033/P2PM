@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<DataCenters>
+    <DataCenter dataCenterId="s"/>
+    <DataCenter dataCenterId="d_1"/>
+    <DataCenter dataCenterId="d_2"/>
+    <DataCenter dataCenterId="d_3"/>
+    <DataCenter dataCenterId="d_4"/>
+    <DataCenter dataCenterId="d_5"/>
+    <DataCenter dataCenterId="d_6"/>
+    <DataCenter dataCenterId="d_7"/>
+    <DataCenter dataCenterId="d_8"/>
+    <DataCenter dataCenterId="d_9"/>
+    <DataCenter dataCenterId="d_10"/>
+    <DataCenter dataCenterId="d_11"/>
+    <DataCenter dataCenterId="d_12"/>
+</DataCenters>
