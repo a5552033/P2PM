@@ -4,6 +4,8 @@
 from __future__ import print_function
 from __future__ import division
 import networkx as nx
+import matplotlib.pyplot as plt
+import pandas
 from node import *
 from link import *
 import copy
@@ -25,7 +27,7 @@ class CSchedule:
         self.outperformedReqs = 0
         self.rejectReqs = 0
         self.acceptReqs = 0
-        self.linkCapacity = 10000000  # 16000000
+        self.linkCapacity = 100000  # 16000000
         self.loadscalingfactor = 1
         self.MAXTIMESLOTNUM = 300
 
@@ -104,7 +106,7 @@ class CSchedule:
 
             self.LINK_DICT[src][sink] = CLink(src, sink, linkid, weight)
             self.LINK_LIST.append(CLink(src, sink, linkid, weight))
-            edge = f.readline()
+            line = f.readline()
         f.close()
 
     def geneTopo(self):
@@ -115,7 +117,7 @@ class CSchedule:
         for src in self.LINK_DICT:
             for sink in self.LINK_DICT[src]:
                 self.topo.add_edges_from([(src, sink)])
-                self.topo.add_edge(src, sink, weight=self.LINK_DICT[src][sink].weight)
+                self.topo.add_edge(src, sink, capacity=self.LINK_DICT[src][sink].weight)
 
     def SRCSemiFlexiable(self):
         print("\nstart Processing...")
@@ -186,31 +188,31 @@ class CSchedule:
                         for d in range(len(new_sink)):
                             sink = new_sink[d]
                             tempSize_2 = 0.0
+                            # 开始构造拓扑
+                            file_node = open("reqNodes.txt", "w")
+                            file_node_path = open("reqNodes_path.txt", "w")
+                            # pathidSize = []
+                            nodelist = [src, sink]
+                            file_node.writelines("%d\n" "%d\n" % (src, sink))
+                            for p in range(rPathNum):
+                                file_node_path.writelines("%d" % src)
+                                file_node_path.writelines("\t")
+                                for nodeindex in range(len(self.PathList_node[src][sink][p])):
+                                    nodeid = self.PathList_node[src][sink][p][nodeindex]
+                                    file_node_path.writelines("%d" % nodeid)
+                                    file_node_path.writelines("\t")
+                                    if nodeid not in nodelist:
+                                        nodelist.append(nodeid)
+                                        file_node.writelines("%d" % nodeid)
+                                        file_node.writelines("\n")
+
+                                file_node_path.writelines("%d" % sink)
+                                file_node_path.writelines("\n")
+                            file_node.close()
+                            file_node_path.close()
+
                             for t in range(rSlotNum - timeAsrc[s]):
                                 # tempSize_3 = 0.0
-
-                                # 开始构造拓扑
-                                file_node = open("reqNodes.txt", "w")
-                                file_node_path = open("reqNodes_path.txt", "w")
-                                # pathidSize = []
-                                nodelist = []
-                                for p in range(rPathNum):
-                                    file_node_path.writelines("%d" % src)
-                                    file_node_path.writelines("\t")
-                                    for nodeindex in range(len(self.PathList_node[src][sink][p])):
-                                        nodeid = self.PathList_node[src][sink][p][nodeindex]
-                                        file_node_path.writelines("%d" % nodeid)
-                                        file_node_path.writelines("\t")
-                                        if nodeid not in nodelist:
-                                            nodelist.append(nodeid)
-                                            file_node.writelines("%d" % nodeid)
-                                            file_node.writelines("\n")
-
-                                    file_node_path.writelines("%d" % sink)
-                                    file_node_path.writelines("\n")
-                                file_node.close()
-                                file_node_path.close()
-
                                 file_node_path = open("reqNodes_path.txt", "r")
                                 file_link = open("reqLinks.txt", "w")
                                 linklist = []
@@ -230,19 +232,27 @@ class CSchedule:
                                 self.loadPathLinks()
                                 self.loadPathNodes()
                                 self.geneTopo()
+
+                                # nx.draw(self.topo)
+                                # plt.show()
+                                # print("aaa")
+
                                 flow_value, flow_dict = nx.maximum_flow(self.topo, src, sink)
                                 # 这一步是将嵌套的字典变成了二维矩阵
                                 flow_matrix = pandas.DataFrame(flow_dict).T.fillna(0)
+                                # print(flow_matrix)
+
+                                # time.sleep(1)
 
                                 file_link = open("reqLinks.txt", "r")
                                 line = file_link.readline()
                                 while line:
                                     edge = str(line).split("\t")
-                                    source = edge[0]
-                                    target = edge[1]
+                                    source = int(edge[0])
+                                    target = int(edge[1])
                                     linknumber = int(edge[3])
                                     linkCostcur[s][d][t + timeAsrc[s]][linknumber] = flow_matrix[source][target]
-                                    line = f.readline()
+                                    line = file_link.readline()
                                 file_link.close()
 
                                 # tempSize = int(min(linkCostSetontcur))
@@ -288,63 +298,15 @@ class CSchedule:
                         totalSize_2 = 0
                         # update c_e_t
                         for t in range(minTimeCost - timeAsrc[m_min]):
+                            print(minTimeCost)
                             # 如果只在一个时隙内就完成传输
                             #if (minTimeCost - timeAsrc[m_min]) == 1:
                                 # totalSize = 0
                                 # 此处无论如何都要循环所有的links
                             for linkindex in range(len(linkCostcur[m_min][n_min][t + timeAsrc[m_min]])):
                                 LinkResCaperSlot[linkindex][t + r_start + timeAsrc[m_min]] -= linkCostcur[m_min][n_min][t + timeAsrc[m_min]][linkindex]
-                                    # if LinkResCaperSlot[linkindex][t + r_start + timeAsrc[m_min]] < 0:
-                                    #     LinkResCaperSlot[linkindex][t + r_start + timeAsrc[m_min]] = 0
-                            # else:
-                            #     if t < (minTimeCost - timeAsrc[m_min] - 1):
-                            #         for p in range(rPathNum):
-                            #             costperLink = pathCaptcur[m_min][n_min][t + timeAsrc[m_min]][p]
-                            #             for linkindex in range(
-                            #                     len(self.PathList[srctoSinkReadytoMove][sinkReadyMovetosrcList][p])):
-                            #                 linkid = self.PathList[srctoSinkReadytoMove][sinkReadyMovetosrcList][p][linkindex]
-                            #                 # costperLink = [LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]]]
-                            #                 # costperLink = pathCaptcur[m_min][n_min][t + timeAsrc[m_min]][p]
-                            #                 LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] -= costperLink
-                            #
-                            #             totalSize_2 += pathCaptcur[m_min][n_min][t + timeAsrc[m_min]][p]
-                            #             # print(pathCaptcur[m_min][n_min][t][p])
-                            #             # print(rSize)
-                            #     else:
-                            #         remainSize = rSize - (totalSize_2 * 300)
-                            #         if totalSize_2 == 0:
-                            #             totalSize = 0
-                            #             for p in range(rPathNum):
-                            #                 totalSize += pathCaptcur[m_min][n_min][t + timeAsrc[m_min]][p]
-                            #
-                            #             for p in range(rPathNum):
-                            #                 ratio = pathCaptcur[m_min][n_min][t + timeAsrc[m_min]][p] / totalSize
-                            #                 costperLink = int(rSize / 300 * ratio)
-                            #                 for linkindex in range(len(
-                            #                         self.PathList[srctoSinkReadytoMove][sinkReadyMovetosrcList][p])):
-                            #                     linkid = self.PathList[srctoSinkReadytoMove][sinkReadyMovetosrcList][p][
-                            #                         linkindex]
-                            #                     LinkResCaperSlot[linkid][
-                            #                         t + r_start + timeAsrc[m_min]] -= costperLink
-                            #                     if LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] < 0:
-                            #
-                            #                         LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] = 0
-                            #         else:
-                            #             totalSize = 0
-                            #             for p in range(rPathNum):
-                            #                 totalSize += pathCaptcur[m_min][n_min][t + timeAsrc[m_min]][p]
-                            #
-                            #             for p in range(rPathNum):
-                            #                 ratio = pathCaptcur[m_min][n_min][t + timeAsrc[m_min]][p] / totalSize
-                            #                 costperLink = remainSize / 300 * ratio
-                            #                 for linkindex in range(len(
-                            #                         self.PathList[srctoSinkReadytoMove][sinkReadyMovetosrcList][p])):
-                            #                     linkid = self.PathList[srctoSinkReadytoMove][sinkReadyMovetosrcList][p][
-                            #                         linkindex]
-                            #                     LinkResCaperSlot[linkid][
-                            #                         t + r_start + timeAsrc[m_min]] -= costperLink
-                            #                     if LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] < 0:
-                            #                         LinkResCaperSlot[linkid][t + r_start + timeAsrc[m_min]] = 0
+                                # if linkCostcur[m_min][n_min][t + timeAsrc[m_min]][linkindex] != 0:
+                                #     print(t + r_start + timeAsrc[m_min], linkindex)
 
                     else:
                         self.rejectReqs += 1
