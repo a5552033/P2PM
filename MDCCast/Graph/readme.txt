@@ -1,0 +1,4 @@
+treeAllReq.txt
+第一行：nodenum linknum treenum
+之后每三行是一个request的三棵树
+每一行都是对应的斯坦纳树对应的link 编号
