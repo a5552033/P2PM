@@ -1,2 +1,0 @@
-Testing algorithm：
-heuristic AGE
