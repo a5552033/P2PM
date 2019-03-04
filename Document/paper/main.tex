@@ -1,0 +1,217 @@
+% @Author: Kong Yijing
+% @Date:   2018-08-29 11:01:52
+% @Last Modified by:   Kong Yijing
+% @Last Modified time: 2018-09-27 13:09:32
+
+\documentclass[a4paper]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{booktabs}
+\usepackage{mathrsfs}
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode} 
+
+\title{Your Paper}
+\author{Yijing Kong}
+{}
+\begin{document}
+\maketitle
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}  % Use Input in the format of Algorithm  
+\renewcommand{\algorithmicensure}{\textbf{Output:}} % Use Output in the format of Algorithm  
+
+\begin{abstract}
+Your abstract.
+\end{abstract}
+
+\section{Introduction}
+
+This document summarizes the heuristic algorithm and the algorithm of offline model.
+
+\section{Mathematics}
+
+\subsection{Network model}
+
+The subsection describes the network model following the P2MP transfer problem.
+
+\subsection{Heuristic Algorithm}
+
+\noindent 
+
+\begin{algorithm}[ht]
+  \caption{Semi-flexible Transfer Source, compared to Completed-flexible Transfer Source}
+  	\begin{algorithmic}[1]
+  	\Require
+      $req$ = ($s, d^{1},...,d^{m}, f, t^{start}, t^{end}$);
+
+      {$\mathcal{P}$}{$_u$$_,$$_v$} = 
+      $\left\{P_1, P_2, \ldots, P_k\right\}$: $k$-shortest paths between the datacenter $u$ and $v$;
+
+      $c_{e, t}$: residual link bandwidth on link $e \in E$ at time $t \in [t^{start}, t^{end}]$.
+    \Ensure
+      $r$ = $\left\{0, 1\right\}$: the current request whether be accepted or not.
+    
+    \State $src \gets \left\{s\right\}$
+    \State $dst \gets \left\{d^{1},...,d^{m}\right\}$
+    \State $ r \gets 0$
+    \While{$|dst| > 0$}
+    	\For{$s = 0 \to |src|-1$}
+    		\For{$d = 0 \to |dst|-1$}
+            	\State computing transfer time from src[s] to dst[d]
+            	and then geting a matrix T[s,d];
+            \EndFor
+        \EndFor
+        \State finding the minimum time from T and with the corresponding longtitude and latitude, \State$[s\_min, d\_min]$
+        \State 
+    \EndWhile
+    \State \Return{$r$}
+    \end{algorithmic}
+  	\label{recentEnd}
+\end{algorithm}
+
+\subsection{Offline Model and XXX Algorithm}
+
+The first paragraph: REVIEW. 
+
+\noindent\textbf{Determining transfer sources:} We use a binary $h_{i,u}^{t}$ to denote whether any one of datacenters \emph{u} can serve as the transfer source at time t $\in$ [0, T] for $req_i$ $\in$ $\mathcal{R}$. For one of requests, we certainly have 
+
+$$
+\forall{i,u,t}: h_{i,u}^{t}src_{i,u} = (survival)_{i}^{t} \eqno{(1)}
+$$
+
+$$
+\forall{i,u,t}: h_{i,u}^{t}dst_{i,u} \leq (survival)_{i}^{t} \eqno{(2)}
+$$
+
+$$
+\forall{i,u,t}: h_{i,u}^{t}(1 - src_{i,u} - dst_{i,u}) = {0} \eqno{(3)}
+$$
+
+\noindent where contant $\emph(survival)_{i}^{t}$, $\emph src_{i,u}$ and $\emph dst_{i,u}$ as binary respectively denote the real lifetime, the possible source datacenters at time t $\in$ [0, T], the required destination datacenters for a request. 
+
+\noindent While for any datacenters, it can become an avalible transfer source at time \emph{t} if it has received the complete package of data \emph{f} by the end of timeslot $\emph t - 1$ for any requests:
+
+$$
+\forall{i,t,v}: \sum_{\tau=0}^{t-1} \sum_{u, u\neq{v}} x_{i, u, v}^{\tau} \geq f_{i}h_{i,v}^{t} \eqno{(4)}
+$$
+
+\noindent where $x_{i, u, v}^{\tau} \geq 0$ represents the data volume received at destination $\emph v $ from datacenter $\emph u$ at time $\tau \in [0, t-1]$ for $i^{th}$ request. Meanwhlie, a datacenter $\emph u$ is able to transfer data to datacenter $\emph v, v\neq u$ only if it is an available transfer source:
+
+$$
+\forall{i,t,u,v,u\neq{v}}: x_{i, u, v}^{t} \leq f_{i}h_{i,u}^{t} \eqno{(5)}
+$$
+
+\noindent To be practical, each destination $v$ is restricted to set up transfer connection with a single source datacenter in the process of data delivery:
+
+$$
+\forall{i,v,u\neq{v}}: \sum_{u, u\neq{v}} z_{i,u,v} = 1  \eqno{(6)}
+$$
+
+\noindent where binary $z_{i,u,v}$ denote whether datacenter $u$ is the transfer source of destination $v$ for $i^{th}$ request. Clearly, there should be
+
+$$
+\forall{i,t,u,v,u\neq{v}}: x_{i,u,v}^{t} \leq f_{i}z_{i,u,v} \eqno{(7)}
+$$
+
+\noindent\textbf{Allocating available bandwidth resources:} Let $y_{i,u,v,p}^{t}$ denote the bandwidth resources that allocated along the routing path P from datacenter $u$ to datacenter $v$ at time $t$ for $i^{th}$ request. The allocations are feasible if:
+
+$$
+\forall{i,t,u,v,u\neq{v}}: \sum_{p \in \mathcal{P}_{u,v}} \alpha y_{i,u,v,p}^{t} \geq x_{i,u,v}^{t} \eqno{(8)}
+$$
+
+$$
+\forall{e,t}: \sum_{i}\sum_{u}\sum_{v}\sum_{p \in \mathcal{P}_{u,v}} y_{i,u,v,p}^{t}I(e \in P) \leq c_{e,t} \eqno{(9)}
+$$
+
+\noindent where contant $\alpha$ denotes the length of each time slot and expression $\sum_{i}\sum_{u}\sum_{v}\sum_{p \in \mathcal{P}_{u,v}} y_{i,u,v,p}^{t}I(e \in P)$ denotes the amount of traffic on link $e$ at time $t \in [0, T]$ for all of requests. Equation (8) states that the allocated routing and bandwidth resources should at least be capable of transferring the damanding data size for $i^{th}$ request; Equation (9) expresses the link load is restricted to not exceed the capacity to avoid link congestion. Meanwhlie, if the real numbers of path between $u$ and $v$ less than the default path number, there should be:
+ 
+$$
+\forall{i,t,u,v,u\neq{v}}: y_{i,u,v,p}^{t} \leq plen_{u,v,p}f_{i} \eqno{(10)}
+$$
+
+\noindent where binary contant $plen_{u,v,p}$ denotes whether the $p^{th}$ path between $u$ and $v$ exists or not.
+
+\noindent\textbf{Guaranteeing deadline for each request:}This needs us to ensure the data transfer can be completed before the deadline for every destination datacenter. Let binary $\omega_{i,d}$ denotes whether the destination $v$ has received all the data before deadline for the $i^{th}$ request. Guaranteeing the dealine for destination $v$ requires the transfer to be completed no later than time $T$. So we have
+
+$$
+\forall{i,v}: \sum_{t=0}^{T}\sum_{u,u\neq{v}}x_{i,u,v}^{t} \geq f_{i} \omega_{i,v} \eqno{(11)}
+$$
+
+\noindent Let binary $r_{i}$ denotes the $i^{th}$ request whether be accepted. If the number of completed destinations equals to the number of required destinations for a request, we accept the request and transfer the required size data during the scheduled transfer period. Clearly, there should be
+
+$$
+\forall{i}: \sum_{v}\omega_{i,v} = r_{i}M_{i} \eqno{(12)}
+$$
+
+\noindent where contant $M_{i}$ denotes the number of destinations for the $i^{th}$ request.
+
+\noindent\textbf{Maximizing the accepted requests:} Our offline model for verifying the basic algorithm is straightforward and is summarized in Algorithm 4. Given $G$ and the set $R$ including all of deadline-constrained P2MP transfer requests at time $t \in [0, T]$, our goal is to maximize the number of accepted requests before time $T$ through solving the corresponding MIP problem in Algorithm 4. 
+ 
+\noindent \\
+\begin{tabular}[b]{p{0.1cm}<{\raggedright}p{13cm}<{\raggedright}}
+\multicolumn{2}{l}
+{\textbf{XXX Algorithm}}\\
+	
+	\specialrule{0.1em}{3pt}{3pt}
+
+	& \textbf{Algorithm 4}\\
+	\specialrule{0.05em}{3pt}{3pt}
+	\textbf{1:}
+	& \textbf{Input:} 
+
+	$\mathcal{R}$ = 
+	$\left\{ 
+	req_1, req_2, \ldots, req_i, \ldots, req_n 
+	\right\}$: all of the requests arrived at time t $\in$ [0, T];\\
+
+	\specialrule{0em}{1pt}{1pt}
+
+	& $req_i$ = 
+	$(
+	s_i, d_i^1, \ldots, d_i^m, f_i, t_i^{start}, t_i^{end}
+	)$ : a transfer request;\\
+
+	\specialrule{0em}{1pt}{1pt}
+
+	& {$\mathcal{P}$}{$_u$$_,$$_v$} = 
+	$\left\{
+	P_1, P_2, \ldots, P_k
+	\right\}$: \emph{k}-shortest paths between the datacenter \emph{u} and \emph{v};\\
+
+	\specialrule{0em}{1pt}{1pt}
+
+	& {\emph{c}}{$_e$$_,$$_t$}: residual link bandwidth on link \emph{e} $\in$ \emph{E} at time t $\in$ [0, T]; \\
+
+	\specialrule{0em}{1pt}{1pt}
+
+	\textbf{2:}
+	& \textbf{output:} \\\specialrule{0em}{1pt}{1pt}
+
+
+	& Return the completion status \emph{r}$_i$ in the solution of the following problem:\\
+
+		\specialrule{0em}{2pt}{2pt}
+		& \[max\sum_{r_{i} \in \mathcal{R}} \emph{r}_{i}\] \\
+
+	& \multicolumn{1}{c}{\emph{s.t.} constrains (1)$\sim$(12)} \\
+
+	\specialrule{0.05em}{2pt}{0pt}
+\end{tabular}
+
+\end{document}
