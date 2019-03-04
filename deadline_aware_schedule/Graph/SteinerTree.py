@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 import networkx as nx
-from node import *
-from link import *
+from Graph.node import *
+from Graph.link import *
 
 
 class CGraph:
@@ -13,14 +13,14 @@ class CGraph:
         self.NODE_DICT = {}
         self.NUMLINK = 0
         self.NODENUM = 0
-        self.cutoff = 5  # simplepath length<=cutoff
+        self.cutoff = 10  # simplepath length<=cutoff
         self.pathNum = 5
         self.loadNodes()
         self.loadLinks()
         self.generateTopo()
 
     def loadNodes(self):
-        f = open("nodes.txt", "r")
+        f = open("./Graph/nodes.txt", "r")
         line = f.readline()
         while line:
             line = line.split("\t")
@@ -34,7 +34,7 @@ class CGraph:
         f.close()
 
     def loadLinks(self):
-        f = open("links.txt", "r")
+        f = open("./Graph/links.txt", "r")
         line = f.readline()
         while line:
             edge = str(line).split("\t")
@@ -66,8 +66,8 @@ class CGraph:
 
     def outputKshortestPath(self):
         self.numSubpath=0
-        f = open("linkonpath.txt", "w")
-        fn = open("nodeonpath.txt", "w")
+        f = open("./Graph/linkonpath.txt", "w")
+        fn = open("./Graph/nodeonpath.txt", "w")
         f.writelines("%d %d %d\n" % (self.NODENUM,self.NUMLINK,self.pathNum))
         pathcount = 0
         for src in self.NODE_DICT:
@@ -89,7 +89,7 @@ class CGraph:
                                 fn.writelines("%d " % path[cur])
                             else:
                                 f.writelines("%d " % self.LINK_DICT[path[cur]][path[pre]].id)
-                            pre=pre+1
+                            pre = pre+1
                         f.writelines("\n")
                         fn.writelines("\n")
                         if pathcount >= self.pathNum:
@@ -101,10 +101,10 @@ class CGraph:
                             pathcount += 1
                             m_pathcount[len(path)-1] += 1
                             self.numSubpath += 1
-                            pre=0
+                            pre = 0
                             fn.writelines("%d " % path[pre])
                             while pre < len(path)-1:
-                                cur=pre+1
+                                cur = pre+1
                                 if path[pre] in self.LINK_DICT and path[cur] in self.LINK_DICT[path[pre]]:
                                     f.writelines("%d " % self.LINK_DICT[path[pre]][path[cur]].id)
                                     fn.writelines("%d " % path[cur])
@@ -118,8 +118,10 @@ class CGraph:
         f.close()
         fn.close()
 
-# if __name__ == "__main__":
-#     print "start..."
-#     mgraph = CGraph()
-#     mgraph.outputKshortestPath()
-#     print mgraph.NODENUM
+
+if __name__ == "__main__":
+    print("generating k paths...")
+    mgraph = CGraph()
+    mgraph.outputKshortestPath()
+    print ("end path generation")
+    #print mgraph.NODENUM
